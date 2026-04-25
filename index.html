@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>ERP 대시보드</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --bg-soft: #fafafa;
+      --fg: #111111;
+      --muted: #6b6b6b;
+      --line: #e5e5e5;
+      --line-strong: #d4d4d4;
+      --track: #f1f1f1;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+      --sidebar-w: 232px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+        "Pretendard", "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-feature-settings: "tnum" 1, "ss01" 1;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      border-right: 1px solid var(--line);
+      padding: 22px 14px;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 8px 18px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 14px;
+    }
+
+    .brand .logo {
+      width: 22px;
+      height: 22px;
+      background: var(--fg);
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .brand h1 {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+
+    .nav-group {
+      margin-bottom: 14px;
+    }
+
+    .nav-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 10px;
+      margin-bottom: 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      color: var(--fg);
+      text-decoration: none;
+      font-size: 13.5px;
+      letter-spacing: -0.005em;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .nav-item:hover { background: var(--bg-soft); }
+
+    .nav-item.is-active {
+      background: var(--fg);
+      color: #fff;
+    }
+
+    .nav-item .icon {
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      flex: none;
+      opacity: 0.9;
+    }
+
+    .nav-item .badge {
+      margin-left: auto;
+      font-size: 10.5px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: var(--bg-soft);
+      color: var(--muted);
+      border: 1px solid var(--line);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .nav-item.is-active .badge {
+      background: rgba(255,255,255,0.16);
+      color: #fff;
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid var(--line);
+      margin-top: 14px;
+      padding-top: 14px;
+      font-size: 12px;
+      color: var(--muted);
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+    .sidebar-footer .who { color: var(--fg); font-weight: 500; }
+
+    /* ---------- Main ---------- */
+    .main {
+      padding: 28px 28px 56px;
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 18px;
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar h2 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+    .topbar .meta { color: var(--muted); font-size: 13px; }
+
+    .menu-toggle {
+      display: none;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-size: 13px;
+      color: var(--fg);
+      cursor: pointer;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin: 6px 0 12px;
+    }
+    .section-title h3 { font-size: 14px; font-weight: 600; margin: 0; }
+    .section-title .hint { font-size: 12px; color: var(--muted); }
+
+    /* ---------- KPI grid ---------- */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 132px;
+      transition: border-color 120ms ease;
+    }
+    .card:hover { border-color: var(--line-strong); }
+
+    .card .head {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card .label { font-size: 13px; font-weight: 500; color: var(--muted); }
+    .card .unit {
+      font-size: 11px; color: var(--muted);
+      border: 1px solid var(--line);
+      padding: 2px 7px; border-radius: 999px; background: var(--bg-soft);
+    }
+    .card .value {
+      font-size: 32px; font-weight: 600;
+      letter-spacing: -0.02em; line-height: 1.05;
+      font-variant-numeric: tabular-nums;
+    }
+    .card .value .suffix {
+      font-size: 14px; font-weight: 500; color: var(--muted);
+      margin-left: 4px; letter-spacing: 0;
+    }
+    .card .delta {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .card .delta .arrow { font-size: 11px; color: var(--fg); }
+    .card .delta.is-down .arrow { color: var(--muted); }
+    .card .delta .vs { color: var(--muted); margin-left: 2px; }
+
+    .progress { margin-top: 2px; }
+    .progress .track {
+      height: 6px; width: 100%;
+      background: var(--track);
+      border-radius: 999px; overflow: hidden;
+    }
+    .progress .bar {
+      height: 100%; background: var(--fg);
+      border-radius: 999px; width: 0;
+      transition: width 600ms ease;
+    }
+    .progress .scale {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: var(--muted);
+      margin-top: 6px; letter-spacing: 0.04em;
+    }
+
+    /* ---------- Two-col data area ---------- */
+    .blocks {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--bg);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel header {
+      display: flex; align-items: baseline; justify-content: space-between;
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel header h3 { margin: 0; font-size: 14px; font-weight: 600; }
+    .panel header .hint { font-size: 12px; color: var(--muted); }
+
+    /* table */
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 11px 18px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    th {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: var(--bg-soft);
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    td.amount { text-align: right; font-weight: 500; }
+    td.muted { color: var(--muted); }
+
+    .pill {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--fg);
+      background: var(--bg-soft);
+    }
+    .pill.is-done { background: var(--fg); color: #fff; border-color: var(--fg); }
+    .pill.is-warn { color: var(--fg); border-color: var(--line-strong); background: #fff; }
+
+    /* low-stock list */
+    .list { padding: 8px 0; }
+    .list .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    .list .row:last-child { border-bottom: none; }
+    .list .row .name { font-size: 13.5px; font-weight: 500; }
+    .list .row .sku { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .list .row .qty {
+      font-size: 13px; font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .list .row .meter {
+      grid-column: 1 / -1;
+      height: 4px; background: var(--track);
+      border-radius: 999px; overflow: hidden;
+      margin-top: 6px;
+    }
+    .list .row .meter > span {
+      display: block; height: 100%;
+      background: var(--fg);
+      border-radius: 999px;
+    }
+
+    /* ---------- responsive ---------- */
+    @media (max-width: 1024px) {
+      .blocks { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      :root { --sidebar-w: 0px; }
+      .app { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed; inset: 0 auto 0 0;
+        width: 260px; z-index: 30;
+        transform: translateX(-100%);
+        transition: transform 220ms ease;
+        box-shadow: 0 0 0 1px var(--line);
+      }
+      .sidebar.is-open { transform: translateX(0); }
+      .scrim {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.32);
+        opacity: 0; pointer-events: none;
+        transition: opacity 220ms ease;
+        z-index: 25;
+      }
+      .scrim.is-open { opacity: 1; pointer-events: auto; }
+      .menu-toggle { display: inline-flex; align-items: center; gap: 6px; }
+      .main { padding: 18px 16px 48px; }
+      .grid { grid-template-columns: 1fr; gap: 12px; }
+      .topbar { flex-wrap: wrap; }
+      th, td { padding: 10px 14px; }
+      .list .row { padding: 12px 14px; }
+      .panel header { padding: 14px 14px 10px; }
+    }
+
+    footer.foot {
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" aria-label="주 메뉴">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">E</span>
+        <h1>ERP</h1>
+      </div>
+
+      <nav class="nav-group" aria-label="운영">
+        <div class="nav-title">운영</div>
+        <a class="nav-item is-active" href="#dashboard">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+          대시보드
+        </a>
+        <a class="nav-item" href="#orders">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 3h10l-1 8H4L3 3Z"/><circle cx="6" cy="13.5" r="1"/><circle cx="11" cy="13.5" r="1"/></svg>
+          주문/출고
+          <span class="badge" id="badge-orders">·</span>
+        </a>
+        <a class="nav-item" href="#inventory">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 5l6-3 6 3-6 3-6-3Z"/><path d="M2 5v6l6 3 6-3V5"/><path d="M8 8v6"/></svg>
+          재고
+        </a>
+        <a class="nav-item" href="#sales">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 12l4-4 3 3 5-6"/><path d="M9 5h4v4"/></svg>
+          영업/CRM
+          <span class="badge">12</span>
+        </a>
+      </nav>
+
+      <nav class="nav-group" aria-label="마케팅">
+        <div class="nav-title">마케팅</div>
+        <a class="nav-item" href="#content">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 6h12"/></svg>
+          콘텐츠
+        </a>
+        <a class="nav-item" href="#leads">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="6" r="3"/><path d="M2.5 13.5c1-2.5 3-4 5.5-4s4.5 1.5 5.5 4"/></svg>
+          신규문의
+          <span class="badge" id="badge-leads">·</span>
+        </a>
+      </nav>
+
+      <nav class="nav-group" aria-label="시스템">
+        <div class="nav-title">시스템</div>
+        <a class="nav-item" href="#reports">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 13V5"/><path d="M7 13V3"/><path d="M11 13v-6"/></svg>
+          리포트
+        </a>
+        <a class="nav-item" href="#settings">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.3 3.3l1.4 1.4M11.3 11.3l1.4 1.4M3.3 12.7l1.4-1.4M11.3 4.7l1.4-1.4"/></svg>
+          설정
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="who">김운영 매니저</div>
+        <div>ops@company.co.kr</div>
+      </div>
+    </aside>
+    <div class="scrim" id="scrim" aria-hidden="true"></div>
+
+    <!-- Main -->
+    <main class="main">
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle" aria-label="메뉴 열기">☰ 메뉴</button>
+        <h2>대시보드</h2>
+        <div class="meta" id="meta"></div>
+      </header>
+
+      <div class="section-title">
+        <h3>핵심 지표</h3>
+        <span class="hint">전월 대비</span>
+      </div>
+      <section class="grid" id="grid"></section>
+
+      <section class="blocks">
+        <div class="panel" id="orders">
+          <header>
+            <h3>최근 주문</h3>
+            <span class="hint">최근 7일</span>
+          </header>
+          <table>
+            <thead>
+              <tr>
+                <th>주문번호</th>
+                <th>고객</th>
+                <th>상품</th>
+                <th>금액</th>
+                <th>상태</th>
+                <th>일자</th>
+              </tr>
+            </thead>
+            <tbody id="orders-body"></tbody>
+          </table>
+        </div>
+
+        <div class="panel" id="inventory">
+          <header>
+            <h3>재고 부족 알림</h3>
+            <span class="hint">안전재고 미만</span>
+          </header>
+          <div class="list" id="lowstock"></div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <span id="source-note">Supabase 연동 데이터</span>
+        <span id="updated"></span>
+      </footer>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const fmt = new Intl.NumberFormat("ko-KR");
+
+    /* ---------- Supabase client ---------- */
+    const SUPABASE_URL = "https://gpssytgprcmrxjhwxais.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_tNkgB5QbjvDMI7I1XVZIAw_XRuELE4a";
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    /* ---------- Data fetchers ---------- */
+    async function fetchKPIs() {
+      const { data, error } = await sb
+        .from("vw_kpi_current")
+        .select("*")
+        .order("display_order", { ascending: true });
+      if (error) throw error;
+      return data.map(r => ({
+        label: r.label_ko,
+        unit: r.unit,
+        value: Number(r.value),
+        delta: r.delta_pct == null ? 0 : Number(r.delta_pct),
+        progress: r.is_progress,
+      }));
+    }
+
+    async function fetchOrders(limit = 6) {
+      const { data, error } = await sb
+        .from("vw_recent_orders")
+        .select("*")
+        .order("ordered_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data.map(r => ({
+        id: r.order_no,
+        customer: r.customer,
+        product: r.products ?? "—",
+        amount: Number(r.total_amount),
+        status: r.status,
+        date: r.date_label,
+      }));
+    }
+
+    async function fetchLowStock(limit = 5) {
+      const { data, error } = await sb
+        .from("vw_low_stock")
+        .select("*")
+        .order("fill_pct", { ascending: true })
+        .limit(limit);
+      if (error) throw error;
+      return data.map(r => ({
+        name: r.name,
+        sku: r.sku,
+        qty: Number(r.qty),
+        safe: Number(r.safe),
+      }));
+    }
+
+    async function fetchBadges() {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+      const [ordersRes, leadsRes] = await Promise.all([
+        sb.from("orders").select("*", { count: "exact", head: true }).gte("ordered_at", sevenDaysAgo),
+        sb.from("leads").select("*", { count: "exact", head: true }).in("status", ["new", "contacted"]),
+      ]);
+      return {
+        orders: ordersRes.count ?? 0,
+        leads: leadsRes.count ?? 0,
+      };
+    }
+
+    /* ---------- KPI cards ---------- */
+    let cards = [];
+
+    function renderCards() {
+      const grid = document.getElementById("grid");
+      grid.innerHTML = cards.map(c => {
+        const isUp = c.delta >= 0;
+        const arrow = isUp ? "↑" : "↓";
+        const sign = isUp ? "+" : "−";
+        const deltaAbs = Math.abs(c.delta).toFixed(1).replace(/\.0$/, "");
+        const valueText = c.progress
+          ? `${c.value}<span class="suffix">%</span>`
+          : `${fmt.format(c.value)}<span class="suffix">${c.unit}</span>`;
+        const progress = c.progress ? `
+          <div class="progress" aria-label="영업 진척률 ${c.value}%">
+            <div class="track"><div class="bar" data-w="${c.value}"></div></div>
+            <div class="scale"><span>0%</span><span>50%</span><span>100%</span></div>
+          </div>` : "";
+        return `
+          <article class="card" aria-label="${c.label}">
+            <div class="head">
+              <span class="label">${c.label}</span>
+              <span class="unit">${c.unit}</span>
+            </div>
+            <div class="value">${valueText}</div>
+            <div class="delta ${isUp ? "is-up" : "is-down"}">
+              <span class="arrow">${arrow}</span>
+              <span>${sign}${deltaAbs}%</span>
+              <span class="vs">vs 전월</span>
+            </div>
+            ${progress}
+          </article>`;
+      }).join("");
+
+      requestAnimationFrame(() => {
+        document.querySelectorAll(".progress .bar").forEach(el => {
+          el.style.width = `${el.dataset.w}%`;
+        });
+      });
+    }
+
+    /* ---------- Recent orders ---------- */
+    let orders = [];
+
+    function renderOrders() {
+      const tbody = document.getElementById("orders-body");
+      if (!orders.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="muted" style="padding:18px;text-align:center;">데이터 없음</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = orders.map(o => {
+        const cls = o.status === "출고완료"
+          ? "pill is-done"
+          : o.status === "출고대기"
+            ? "pill is-warn"
+            : "pill";
+        return `
+          <tr>
+            <td class="muted">${o.id}</td>
+            <td>${o.customer}</td>
+            <td class="muted">${o.product}</td>
+            <td class="amount">₩ ${fmt.format(o.amount)}</td>
+            <td><span class="${cls}">${o.status}</span></td>
+            <td class="muted">${o.date}</td>
+          </tr>`;
+      }).join("");
+    }
+
+    /* ---------- Low stock ---------- */
+    let lowStock = [];
+
+    function renderLowStock() {
+      const root = document.getElementById("lowstock");
+      if (!lowStock.length) {
+        root.innerHTML = `<div class="row"><div class="muted" style="padding:6px 0;">데이터 없음</div></div>`;
+        return;
+      }
+      root.innerHTML = lowStock.map(s => {
+        const ratio = Math.max(2, Math.min(100, Math.round((s.qty / s.safe) * 100)));
+        return `
+          <div class="row">
+            <div>
+              <div class="name">${s.name}</div>
+              <div class="sku">${s.sku} · 안전재고 ${fmt.format(s.safe)}EA</div>
+            </div>
+            <div class="qty">${fmt.format(s.qty)} EA</div>
+            <div class="meter" aria-label="재고 ${ratio}%"><span style="width:${ratio}%"></span></div>
+          </div>`;
+      }).join("");
+    }
+
+    /* ---------- Topbar meta ---------- */
+    function setMeta() {
+      const now = new Date();
+      const date = now.toLocaleDateString("ko-KR", {
+        year: "numeric", month: "long", day: "numeric", weekday: "short"
+      });
+      const time = now.toLocaleTimeString("ko-KR", {
+        hour: "2-digit", minute: "2-digit"
+      });
+      document.getElementById("meta").textContent = `${date} · ${time} 기준`;
+      document.getElementById("updated").textContent = `최근 갱신 ${time}`;
+    }
+
+    /* ---------- Sidebar nav interactions ---------- */
+    function bindNav() {
+      const items = document.querySelectorAll(".nav-item");
+      items.forEach(el => {
+        el.addEventListener("click", e => {
+          items.forEach(n => n.classList.remove("is-active"));
+          el.classList.add("is-active");
+          closeSidebar();
+        });
+      });
+    }
+
+    /* ---------- Mobile sidebar toggle ---------- */
+    const sidebar = document.getElementById("sidebar");
+    const scrim = document.getElementById("scrim");
+    function openSidebar()  { sidebar.classList.add("is-open"); scrim.classList.add("is-open"); }
+    function closeSidebar() { sidebar.classList.remove("is-open"); scrim.classList.remove("is-open"); }
+    document.getElementById("menuToggle").addEventListener("click", openSidebar);
+    scrim.addEventListener("click", closeSidebar);
+
+    function renderBadges({ orders, leads }) {
+      const o = document.getElementById("badge-orders");
+      const l = document.getElementById("badge-leads");
+      if (o) o.textContent = String(orders);
+      if (l) l.textContent = String(leads);
+    }
+
+    function showError(msg) {
+      const note = document.getElementById("source-note");
+      if (note) note.textContent = `⚠ ${msg}`;
+      console.error(msg);
+    }
+
+    async function loadAll() {
+      try {
+        const [kpi, ord, low, badges] = await Promise.all([
+          fetchKPIs(),
+          fetchOrders(6),
+          fetchLowStock(5),
+          fetchBadges(),
+        ]);
+        cards = kpi;
+        orders = ord;
+        lowStock = low;
+        renderCards();
+        renderOrders();
+        renderLowStock();
+        renderBadges(badges);
+        const note = document.getElementById("source-note");
+        if (note) note.textContent = `Supabase · ${cards.length} KPI · ${orders.length} 주문 · ${lowStock.length} 재고알림`;
+      } catch (err) {
+        showError(`데이터 로드 실패: ${err.message ?? err}. setup.sql 실행 여부를 확인하세요.`);
+        renderCards();
+        renderOrders();
+        renderLowStock();
+      }
+    }
+
+    setMeta();
+    bindNav();
+    renderOrders();
+    renderLowStock();
+    loadAll();
+  </script>
+</body>
+</html>
